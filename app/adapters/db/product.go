@@ -12,6 +12,10 @@ type ProductPersistenceService struct {
 	db *sql.DB
 }
 
+func NewProductPersistenceService(db *sql.DB) *ProductPersistenceService {
+	return &ProductPersistenceService{db: db}
+}
+
 func (p *ProductPersistenceService) Get(id string) (app.ProductInterface, error) {
 	var product app.Product
 
@@ -30,20 +34,23 @@ func (p *ProductPersistenceService) Get(id string) (app.ProductInterface, error)
 	return &product, nil
 }
 
-// func (p *ProductPersistenceService) Save(product app.ProductInterface) (app.ProductInterface, error) {
-// 	var product app.Product
+func (p *ProductPersistenceService) Save(product app.ProductInterface) (app.ProductInterface, error) {
+	stmt, err := p.db.Prepare("INSERT INTO products (id, name, price, status) VALUES (?, ?, ?, ?)")
 
-// 	stmt, err := p.db.Prepare("INSERT INTO products (id, name, price, status) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return nil, err
+	}
 
-// 	if err != nil {
-// 		return &product, err
-// 	}
+	_, err = stmt.Exec(
+		product.GetId(),
+		product.GetName(),
+		product.GetPrice(),
+		product.GetStatus(),
+	)
 
-// 	_, err = stmt.Exec(product.GetId(), product.GetName(), product.GetPrice(), product.GetStatus())
+	if err != nil {
+		return nil, err
+	}
 
-// 	if err != nil {
-// 		return &product, err
-// 	}
-
-// 	return product, nil
-// }
+	return product, nil
+}
